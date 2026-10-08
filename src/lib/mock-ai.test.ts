@@ -9,7 +9,7 @@ describe("task planner", () => {
 
   it("pins tasks with an explicit time to that slot", () => {
     const plan = planTasks("team sync at 10am", "Daily", "09:00", "17:00");
-    expect(plan[0].start).toBe("10:00");
+    expect(plan[0]?.start).toBe("10:00");
   });
 
   it("classifies client work as high priority", () => {

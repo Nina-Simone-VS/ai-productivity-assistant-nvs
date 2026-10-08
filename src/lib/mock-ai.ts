@@ -27,7 +27,7 @@ export function generateEmail(input: {
   length: Length;
 }): { subject: string; body: string } {
   const recipient = input.recipient.trim() || "Team";
-  const name = recipient.split(/[,(]/)[0].trim();
+  const name = (recipient.split(/[,(]/)[0] ?? recipient).trim();
   const points = splitPoints(input.points);
   const topic = points[0] ? trimDot(points[0]) : "a quick update";
   const short = topic.length > 48 ? topic.slice(0, 45).trim() + "…" : topic;
@@ -113,7 +113,7 @@ export function summarizeMeeting(title: string, notes: string): MeetingSummary {
   lines.forEach((raw, i) => {
     const m = raw.match(/^([A-Z][a-zA-Z]+)\s*:\s*(.*)$/);
     const speaker = m?.[1];
-    const line = m ? m[2] : raw;
+    const line: string = (m ? m[2] : raw) ?? raw;
     const lower = line.toLowerCase();
 
     if (/\b(decided|agreed|approved|we will go with|decision|consensus)\b/.test(lower)) {
@@ -126,14 +126,14 @@ export function summarizeMeeting(title: string, notes: string): MeetingSummary {
     if (actionMatch) {
       let owner = "Unassigned";
       let text = line;
-      if (/^(I'll|I will)$/i.test(actionMatch[1])) {
+      if (/^(I'll|I will)$/i.test(actionMatch[1] ?? "")) {
         owner = speaker ?? "Unassigned";
-        text = actionMatch[2];
-      } else if (actionMatch.length === 4 && !/^(We|It|This|That|They)$/.test(actionMatch[1])) {
-        owner = actionMatch[1];
-        text = actionMatch[3];
+        text = actionMatch[2] ?? line;
+      } else if (actionMatch.length === 4 && !/^(We|It|This|That|They)$/.test(actionMatch[1] ?? "We")) {
+        owner = actionMatch[1] ?? owner;
+        text = actionMatch[3] ?? line;
       } else if (/action/i.test(actionMatch[0])) {
-        text = actionMatch[actionMatch.length - 1];
+        text = actionMatch[actionMatch.length - 1] ?? line;
       }
       actions.push({ id: `a${i}`, text: cap(trimDot(text)), owner, done: false });
     }
@@ -188,7 +188,7 @@ export function classifyPriority(task: string): Priority {
 
 const toMin = (hhmm: string) => {
   const [h, m] = hhmm.split(":").map(Number);
-  return h * 60 + (m || 0);
+  return (h ?? 0) * 60 + (m || 0);
 };
 const fmt = (min: number) =>
   `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
@@ -245,7 +245,7 @@ export function planTasks(
           id: t.id,
           title: t.title,
           priority: t.priority,
-          day: days[Math.floor(i / 3) % 5],
+          day: days[Math.floor(i / 3) % 5] ?? "Mon",
           start: fmt(s),
           end: fmt(Math.min(s + DURATION[t.priority], endMin)),
           done: false,
