@@ -3,13 +3,59 @@
 export type Tone = "Formal" | "Friendly" | "Persuasive" | "Urgent";
 export type Length = "Concise" | "Detailed";
 
-export const EMAIL_PROMPT_TEMPLATE = `SYSTEM: You are a professional workplace communication assistant.
-Write an email to {recipient}.
-Tone: {tone}. Length: {length}.
-Cover these key points faithfully, without inventing facts, figures or dates:
-{key_points}
-Return a clear subject line and a well-structured body with a greeting and sign-off.
-Flag any information the sender should verify before sending.`;
+export type Audience = "Client" | "Manager/Executive" | "Team/Colleagues";
+
+export type PromptStructure = { role: string; context: string; task: string; constraints: string[] };
+
+export const AUDIENCE_GUIDANCE: Record<Audience, string> = {
+  Client: "External client: polished, service-oriented, value-focused; avoid internal jargon.",
+  "Manager/Executive": "Senior leadership: lead with the bottom line, keep it brief, highlight impact and decisions needed.",
+  "Team/Colleagues": "Internal peers: collaborative, direct and practical; clear owners and next steps.",
+};
+
+export function emailPrompt(i: { recipient: string; points: string; tone: Tone; length: Length; audience: Audience }): PromptStructure {
+  return {
+    role: "You are a professional workplace communication assistant.",
+    context: `Recipient: ${i.recipient || "[recipient]"}. Audience: ${i.audience} — ${AUDIENCE_GUIDANCE[i.audience]} Tone: ${i.tone}. Length: ${i.length}.`,
+    task: `Write an email with a clear subject line and a structured body covering these key points:\n${i.points || "[key points]"}`,
+    constraints: [
+      "Do not invent facts, figures, names or dates.",
+      `Match the ${i.tone.toLowerCase()} tone and ${i.audience} expectations.`,
+      i.length === "Concise" ? "Keep it short and scannable (bullets allowed)." : "Elaborate each point in its own paragraph.",
+      "Flag anything the sender should verify before sending.",
+    ],
+  };
+}
+
+export function meetingPrompt(title: string, notes: string): PromptStructure {
+  return {
+    role: "You are an expert meeting analyst and note-taker.",
+    context: `Meeting: ${title || "[untitled]"}. Raw notes/transcript of ${notes.split("\n").filter(Boolean).length} lines provided by the user.`,
+    task: "Extract an executive summary, action items with owners, key decisions, and deadlines / next steps.",
+    constraints: [
+      "Only use information present in the notes — never infer owners or dates.",
+      "Mark action items without a clear owner as 'Unassigned'.",
+      "Keep the summary under 80 words.",
+      "Return each section separately so the user can edit it.",
+    ],
+  };
+}
+
+export function plannerPrompt(dump: string, horizon: string, start: string, end: string): PromptStructure {
+  return {
+    role: "You are a productivity coach and scheduling assistant.",
+    context: `Planning horizon: ${horizon}. Working hours: ${start}–${end}. Tasks: ${dump || "[brain dump]"}`,
+    task: "Classify each task as High / Medium / Low priority (urgency × importance) and build a time-blocked schedule.",
+    constraints: [
+      "Respect any fixed times mentioned (e.g. 'at 10am').",
+      "Sort strictly by priority, then by start time.",
+      "Stay within working hours and leave short buffers between blocks.",
+      "Never drop a task the user listed.",
+    ],
+  };
+}
+
+export const EMAIL_PROMPT_TEMPLATE = "";
 
 const splitPoints = (text: string) =>
   text
@@ -25,6 +71,7 @@ export function generateEmail(input: {
   points: string;
   tone: Tone;
   length: Length;
+  audience?: Audience;
 }): { subject: string; body: string } {
   const recipient = input.recipient.trim() || "Team";
   const name = (recipient.split(/[,(]/)[0] ?? recipient).trim();
@@ -57,6 +104,17 @@ export function generateEmail(input: {
     Urgent: "Could you please confirm by end of day? Thank you for the quick turnaround.\n\nThanks,",
   };
 
+  const audience = input.audience ?? "Team/Colleagues";
+  const audienceLine: Record<Audience, string> = {
+    Client: "Our priority is making sure this delivers clear value for you and your team.",
+    "Manager/Executive": "Bottom line up front: here is what you need to know and any decision required from you.",
+    "Team/Colleagues": "Here's a quick rundown so we're all on the same page.",
+  };
+  const signoff: Record<Audience, string> = {
+    Client: "\nWe appreciate your partnership.",
+    "Manager/Executive": "\nHappy to provide more detail if useful.",
+    "Team/Colleagues": "",
+  };
   const list = points.length ? points : ["Sharing a brief update and next steps."];
   let middle: string;
   if (input.length === "Concise") {
@@ -73,7 +131,7 @@ export function generateEmail(input: {
 
   return {
     subject: subjects[input.tone],
-    body: `${greet[input.tone]}\n\n${open[input.tone]}\n\n${middle}\n\n${close[input.tone]}\n[Your name]`,
+    body: `${greet[input.tone]}\n\n${open[input.tone]} ${audienceLine[audience]}\n\n${middle}\n${signoff[audience]}\n\n${close[input.tone]}\n[Your name]`,
   };
 }
 
