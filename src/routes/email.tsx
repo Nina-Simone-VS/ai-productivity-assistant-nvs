@@ -1,13 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Copy, Mail, RotateCcw, Trash2, Code2 } from "lucide-react";
+import { Copy, Mail, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { EmptyOutput, ExampleButton, Field, GenerateButton, PageHeader, Pane, Segmented, fakeLatency } from "@/components/workspace";
-import { EMAIL_PROMPT_TEMPLATE, generateEmail, type Length, type Tone } from "@/lib/mock-ai";
+import { EmptyOutput, ExampleButton, Field, GenerateButton, PageHeader, Pane, PromptAccordion, Segmented, fakeLatency } from "@/components/workspace";
+import { emailPrompt, generateEmail, type Audience, type Length, type Tone } from "@/lib/mock-ai";
 
 export const Route = createFileRoute("/email")({
   head: () => ({
@@ -25,11 +24,13 @@ export const Route = createFileRoute("/email")({
 
 const TONES = ["Formal", "Friendly", "Persuasive", "Urgent"] as const;
 const LENGTHS = ["Concise", "Detailed"] as const;
+const AUDIENCES = ["Client", "Manager/Executive", "Team/Colleagues"] as const;
 
 function EmailPage() {
   const [recipient, setRecipient] = useState("");
   const [points, setPoints] = useState("");
   const [tone, setTone] = useState<Tone>("Formal");
+  const [audience, setAudience] = useState<Audience>("Client");
   const [length, setLength] = useState<Length>("Concise");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
@@ -39,17 +40,12 @@ function EmailPage() {
     if (!points.trim()) { toast.error("Add a few key points first."); return; }
     setLoading(true);
     await fakeLatency();
-    const r = generateEmail({ recipient, points, tone, length });
+    const r = generateEmail({ recipient, points, tone, length, audience });
     setSubject(r.subject);
     setBody(r.body);
     setLoading(false);
     toast.success("Draft ready — please review before sending.");
   };
-
-  const prompt = EMAIL_PROMPT_TEMPLATE.replace("{recipient}", recipient || "[recipient]")
-    .replace("{tone}", tone)
-    .replace("{length}", length)
-    .replace("{key_points}", points || "[key points]");
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -63,6 +59,7 @@ function EmailPage() {
                 setRecipient("Maria Chen, Head of Finance");
                 setPoints("Q3 budget report is ready for review\nMarketing spend came in 8% under forecast\nNeed sign-off before the board meeting on Friday");
                 setTone("Formal");
+                setAudience("Manager/Executive");
               }}
             />
           }
@@ -74,9 +71,14 @@ function EmailPage() {
             <Field label="Key points / purpose">
               <Textarea rows={6} value={points} onChange={(e) => setPoints(e.target.value)} placeholder={"e.g. Follow up on proposal sent last week\nAsk for feedback by Thursday\nOffer a call to discuss"} />
             </Field>
-            <Field label="Tone">
-              <Segmented options={TONES} value={tone} onChange={setTone} />
-            </Field>
+            <div className="grid gap-5 xl:grid-cols-2">
+              <Field label="Tone">
+                <Segmented options={TONES} value={tone} onChange={setTone} />
+              </Field>
+              <Field label="Audience">
+                <Segmented options={AUDIENCES} value={audience} onChange={setAudience} />
+              </Field>
+            </div>
             <Field label="Length">
               <Segmented options={LENGTHS} value={length} onChange={setLength} />
             </Field>
@@ -113,16 +115,7 @@ function EmailPage() {
           ) : (
             <EmptyOutput text="Your generated email will appear here, fully editable." />
           )}
-          <Accordion type="single" collapsible className="mt-5 rounded-xl border bg-secondary/50 px-4">
-            <AccordionItem value="p" className="border-none">
-              <AccordionTrigger className="text-sm">
-                <span className="flex items-center gap-2"><Code2 className="size-4 text-primary" /> View Prompt Template</span>
-              </AccordionTrigger>
-              <AccordionContent>
-                <pre className="whitespace-pre-wrap rounded-lg bg-card p-3 font-mono text-xs leading-relaxed text-muted-foreground">{prompt}</pre>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+          <PromptAccordion prompt={emailPrompt({ recipient, points, tone, length, audience })} />
         </Pane>
       </div>
     </div>
