@@ -40,7 +40,7 @@ function PlannerPage() {
   const [tasks, setTasks] = useState<PlannedTask[]>([]);
 
   const run = async () => {
-    if (!dump.trim()) return toast.error("List a few tasks first.");
+    if (!dump.trim()) { toast.error("List a few tasks first."); return; }
     setLoading(true);
     await fakeLatency();
     setTasks(planTasks(dump, horizon === "Daily Schedule" ? "Daily" : "Weekly", start, end));

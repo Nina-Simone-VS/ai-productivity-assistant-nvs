@@ -36,7 +36,7 @@ function EmailPage() {
   const [loading, setLoading] = useState(false);
 
   const run = async () => {
-    if (!points.trim()) return toast.error("Add a few key points first.");
+    if (!points.trim()) { toast.error("Add a few key points first."); return; }
     setLoading(true);
     await fakeLatency();
     const r = generateEmail({ recipient, points, tone, length });

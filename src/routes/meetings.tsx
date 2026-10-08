@@ -46,7 +46,7 @@ function MeetingsPage() {
   };
 
   const run = async () => {
-    if (!notes.trim()) return toast.error("Paste some notes or load the sample transcript.");
+    if (!notes.trim()) { toast.error("Paste some notes or load the sample transcript."); return; }
     setLoading(true);
     await fakeLatency();
     setOut(summarizeMeeting(title, notes));
