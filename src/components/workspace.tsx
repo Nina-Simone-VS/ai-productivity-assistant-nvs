@@ -1,6 +1,8 @@
 import { Loader2, Sparkles, Wand2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import type { PromptStructure } from "@/lib/mock-ai";
 import { cn } from "@/lib/utils";
 
 export function PageHeader({ title, description, icon }: { title: string; description: string; icon: ReactNode }) {
@@ -85,3 +87,29 @@ export function EmptyOutput({ text }: { text: string }) {
 }
 
 export const fakeLatency = () => new Promise((r) => setTimeout(r, 900 + Math.random() * 600));
+
+export function PromptAccordion({ prompt }: { prompt: PromptStructure }) {
+  const rows: [string, ReactNode][] = [
+    ["Role", prompt.role],
+    ["Context", prompt.context],
+    ["Task", prompt.task],
+    ["Constraints", <ul className="list-disc space-y-0.5 pl-4">{prompt.constraints.map((c) => <li key={c}>{c}</li>)}</ul>],
+  ];
+  return (
+    <Accordion type="single" collapsible className="mt-5 rounded-xl border bg-secondary/50 px-4">
+      <AccordionItem value="p" className="border-none">
+        <AccordionTrigger className="text-sm">🔍 View AI Prompt Structure</AccordionTrigger>
+        <AccordionContent>
+          <dl className="space-y-2.5 rounded-lg bg-card p-3.5 text-xs leading-relaxed">
+            {rows.map(([k, v]) => (
+              <div key={k} className="grid gap-1 sm:grid-cols-[90px_1fr]">
+                <dt className="font-semibold uppercase tracking-wider text-primary">{k}</dt>
+                <dd className="whitespace-pre-wrap text-muted-foreground">{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  );
+}

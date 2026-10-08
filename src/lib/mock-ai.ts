@@ -55,8 +55,6 @@ export function plannerPrompt(dump: string, horizon: string, start: string, end:
   };
 }
 
-export const EMAIL_PROMPT_TEMPLATE = "";
-
 const splitPoints = (text: string) =>
   text
     .split(/\n|;|(?<=\.)\s+/)

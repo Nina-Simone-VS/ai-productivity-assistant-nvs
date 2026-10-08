@@ -6,9 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { EmptyOutput, ExampleButton, Field, GenerateButton, PageHeader, Pane, Segmented, fakeLatency } from "@/components/workspace";
-import { SAMPLE_TASKS, planTasks, sortByPriority, type PlannedTask, type Priority } from "@/lib/mock-ai";
+import { EmptyOutput, ExampleButton, Field, GenerateButton, PageHeader, Pane, PromptAccordion, Segmented, fakeLatency } from "@/components/workspace";
+import { SAMPLE_TASKS, planTasks, plannerPrompt, sortByPriority, type PlannedTask, type Priority } from "@/lib/mock-ai";
 import { cn } from "@/lib/utils";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 
 export const Route = createFileRoute("/planner")({
   head: () => ({
@@ -29,6 +31,7 @@ const BADGE: Record<Priority, string> = {
   Medium: "bg-prio-med text-prio-med-foreground",
   Low: "bg-prio-low text-prio-low-foreground",
 };
+const PRIORITIES: Priority[] = ["High", "Medium", "Low"];
 const HORIZONS = ["Daily Schedule", "Weekly Priorities"] as const;
 
 function PlannerPage() {
@@ -98,7 +101,21 @@ function PlannerPage() {
                         className={cn("w-full rounded-md bg-transparent px-1 py-0.5 text-sm font-medium outline-none focus:bg-secondary", t.done && "line-through")}
                       />
                     </div>
-                    <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold", BADGE[t.priority])}>{t.priority}</span>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        aria-label={`Change priority (${t.priority})`}
+                        className={cn("inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold transition-shadow hover:shadow-soft focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none", BADGE[t.priority])}
+                      >
+                        {t.priority} <ChevronDown className="size-3" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="min-w-32">
+                        {PRIORITIES.map((p) => (
+                          <DropdownMenuItem key={p} onSelect={() => { update(t.id, { priority: p }); toast(`Priority set to ${p}`); }}>
+                            <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", BADGE[p])}>{p}</span>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </li>
               ))}
@@ -106,6 +123,16 @@ function PlannerPage() {
           ) : (
             <EmptyOutput text="Your prioritized, time-blocked plan will appear here." />
           )}
+          {tasks.length > 0 && (
+            <div className="mt-5 rounded-xl border border-primary/15 bg-accent/60 p-4 animate-fade-up">
+              <h3 className="mb-2 text-sm font-semibold text-accent-foreground">💡 Time Optimization Strategy</h3>
+              <ul className="list-disc space-y-1.5 pl-5 text-sm text-foreground/80">
+                <li>Tackle your {tasks.filter((t) => t.priority === "High").length || "most"} high-impact task{tasks.filter((t) => t.priority === "High").length === 1 ? "" : "s"} early, while focus and energy are at their peak.</li>
+                <li>Batch your {tasks.filter((t) => t.priority === "Low").length || "small"} low-priority task{tasks.filter((t) => t.priority === "Low").length === 1 ? "" : "s"} into one block late in the day to cut down on context switching.</li>
+              </ul>
+            </div>
+          )}
+          <PromptAccordion prompt={plannerPrompt(dump, horizon, start, end)} />
         </Pane>
       </div>
     </div>

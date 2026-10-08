@@ -6,8 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { EmptyOutput, ExampleButton, Field, GenerateButton, PageHeader, Pane, fakeLatency } from "@/components/workspace";
-import { SAMPLE_TRANSCRIPT, summarizeMeeting, type MeetingSummary } from "@/lib/mock-ai";
+import { EmptyOutput, ExampleButton, Field, GenerateButton, PageHeader, Pane, PromptAccordion, fakeLatency } from "@/components/workspace";
+import { SAMPLE_TRANSCRIPT, meetingPrompt, summarizeMeeting, type MeetingSummary } from "@/lib/mock-ai";
 
 export const Route = createFileRoute("/meetings")({
   head: () => ({
@@ -139,6 +139,7 @@ function MeetingsPage() {
           ) : (
             <EmptyOutput text="Summary, action items, decisions and deadlines will appear here." />
           )}
+          <PromptAccordion prompt={meetingPrompt(title, notes)} />
         </Pane>
       </div>
     </div>
