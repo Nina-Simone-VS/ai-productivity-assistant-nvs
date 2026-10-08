@@ -97,7 +97,7 @@ export type MeetingSummary = {
 };
 
 const DATE_RE =
-  /\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today|eod|end of (day|week|month)|next week|q[1-4]|\d{1,2}(st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*|(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+\d{1,2})\b/i;
+  /\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today|eod|end of (day|week|month)|next week|\d{1,2}(st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*|(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+\d{1,2})\b/i;
 
 export function summarizeMeeting(title: string, notes: string): MeetingSummary {
   const lines = notes
