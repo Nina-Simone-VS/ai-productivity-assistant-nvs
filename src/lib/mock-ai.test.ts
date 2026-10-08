@@ -16,3 +16,11 @@ describe("task planner", () => {
     expect(classifyPriority("reply to client email")).toBe("High");
   });
 });
+
+import { generateEmail } from "./mock-ai";
+describe("email audience", () => {
+  it("leads with the bottom line for executives", () => {
+    const r = generateEmail({ recipient: "Ann", points: "Budget ready", tone: "Formal", length: "Concise", audience: "Manager/Executive" });
+    expect(r.body).toContain("Bottom line up front");
+  });
+});
